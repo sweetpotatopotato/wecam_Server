@@ -1,3 +1,4 @@
+// models/comment.js
 const Sequelize = require('sequelize');
 
 class Comment extends Sequelize.Model {
@@ -13,6 +14,20 @@ class Comment extends Sequelize.Model {
                 type: Sequelize.STRING(200),
                 allowNull: false,
             },
+            p_id: {
+                type: Sequelize.INTEGER,
+                allowNull: false,
+            },
+            s_id: {
+                type: Sequelize.STRING(15),
+                allowNull: false,
+                unique: true,
+            },
+            t_id: {
+                type: Sequelize.STRING(15),
+                allowNull: false,
+                unique: true,
+            }
         }, {
             sequelize,
             timestamps: true,
@@ -20,13 +35,15 @@ class Comment extends Sequelize.Model {
             modelName: 'Comment',
             tableName: 'comments',
             paranoid: false,
-            charset: 'utf8mb4',
-            collate: 'utf8mb4_general_ci',
+            charset: 'utf8',
+            collate: 'utf8_general_ci',
         });
     }
-  
+
     static associate(db) {
-        db.User.hasMany(db.Post);
+        db.Comment.belongsTo(db.Post, { foreignKey: 'p_id', onDelete: 'CASCADE', onUpdate: 'CASCADE' });
+        db.Comment.belongsTo(db.Students, { foreignKey: 's_id', onDelete: 'CASCADE', onUpdate: 'CASCADE' });
+        db.Comment.belongsTo(db.Teachers, { foreignKey: 's_id', onDelete: 'CASCADE', onUpdate: 'CASCADE' });
     }
 }
 

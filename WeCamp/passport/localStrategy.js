@@ -20,9 +20,9 @@ module.exports = () => {
 
             // 사용자가 존재하는지 확인
             if (user) {
-                const passwordField = user.s_pass ? user.s_pass : user.t_pass;
+                const passwordField = user.s_pass || user.t_pass; // 학생/선생의 비밀번호 필드 확인
                 if (password === passwordField) {
-                    return done(null, user);
+                    return done(null, user); // 로그인 성공
                 } else {
                     return done(null, false, { message: '비밀번호가 일치하지 않습니다.' });
                 }
@@ -34,4 +34,25 @@ module.exports = () => {
             return done(error);
         }
     }));
+
+    // serializeUser: ID만 세션에 저장
+    passport.serializeUser((user, done) => {
+        done(null, user.s_id || user.t_id); // ID만 저장
+    });
+
+    // deserializeUser: ID를 이용해 유저 정보 불러오기
+    passport.deserializeUser(async (id, done) => {
+        try {
+            let user = await Students.findOne({ where: { s_id: id } }) ||
+                       await Teachers.findOne({ where: { t_id: id } });
+
+            if (!user) {
+                return done(new Error('User not found'));
+            }
+
+            done(null, user);
+        } catch (err) {
+            done(err);
+        }
+    });
 };

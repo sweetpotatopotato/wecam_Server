@@ -1,3 +1,4 @@
+// models/students.js
 const Sequelize = require('sequelize');
 
 class Students extends Sequelize.Model {
@@ -34,9 +35,10 @@ class Students extends Sequelize.Model {
         });
     }
 
-    static associations(db) {
-        db.User.hasMany(db.Post);
-    }    
-};
+    static associate(db) {
+        db.Students.hasMany(db.Post, { foreignKey: 's_id', onDelete: 'SET NULL', onUpdate: 'CASCADE' });
+        db.Students.hasMany(db.Comment, { foreignKey: 's_id', onDelete: 'SET NULL', onUpdate: 'CASCADE' });
+    }
+}
 
 module.exports = Students;

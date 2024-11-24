@@ -1,3 +1,4 @@
+// models/post.js
 const Sequelize = require('sequelize');
 
 class Post extends Sequelize.Model {
@@ -17,9 +18,15 @@ class Post extends Sequelize.Model {
                 type: Sequelize.STRING(140),
                 allowNull: false,
             },
-            p_img: {
-                type: Sequelize.STRING(200),
-                allowNull: true,
+            s_id: {
+                type: Sequelize.STRING(15),
+                allowNull: false,
+                unique: true,
+            },
+            t_id: {
+                type: Sequelize.STRING(15),
+                allowNull: false,
+                unique: true,
             },
         }, {
             sequelize,
@@ -28,15 +35,23 @@ class Post extends Sequelize.Model {
             modelName: 'Post',
             tableName: 'posts',
             paranoid: false,
-            charset: 'utf8mb4',
-            collate: 'utf8mb4_general_ci',
+            charset: 'utf8',
+            collate: 'utf8_general_ci',
         });
     }
-  
+
     static associate(db) {
-        db.Post.hasMany(db.Students);
-        db.Post.hasMany(db.Teachers);
-        db.User.hasMany(db.Comment);
+        db.Post.belongsTo(db.Students, {
+            foreignKey: 's_id',
+            onDelete: 'CASCADE',
+            onUpdate: 'CASCADE'
+        });
+        db.Post.belongsTo(db.Teachers, {
+            foreignKey: 's_id',
+            onDelete: 'CASCADE',
+            onUpdate: 'CASCADE'
+        });
+        db.Post.hasMany(db.Comment, { foreignKey: 'p_id', onDelete: 'CASCADE', onUpdate: 'CASCADE' });
     }
 }
 

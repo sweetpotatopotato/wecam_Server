@@ -45,7 +45,7 @@ exports.s_signup = async (req, res, next) => {
 }
 
 exports.t_signup = async (req, res, next) => {
-    console.log(req.body)
+    console.log(req.body);
     const { t_id, t_pass, t_name, t_nicname, t_subject } = req.body;
 
     if (/\s/.test(t_id) || /\s/.test(t_pass) || /\s/.test(t_name) || /\s/.test(t_nicname)) {
@@ -65,16 +65,19 @@ exports.t_signup = async (req, res, next) => {
         if (t_subject.length > 15) {
             return res.status(400).send('과목은 최대 15자 입니다.');
         }
+
         const exTeachers = await Teachers.findOne({ where: { t_id } });
         const exStudents = await Students.findOne({ where: { s_id: t_id } });
-        const exTeacher = await Teachers.findOne({ where: t_nicname });
+        const exTeacher = await Teachers.findOne({ where: { t_nicname } });  // 수정된 부분
         const exStudent = await Students.findOne({ where: { s_nicname: t_nicname } });
+
         if (exTeachers || exStudents) {
             return res.status(400).send('이미 존재하는 아이디입니다.');
         }
         if (exTeacher || exStudent) {
             return res.status(400).send('이미 존재하는 닉네임입니다.');
         }
+
         await Teachers.create({
             t_id,
             t_pass,
@@ -82,12 +85,14 @@ exports.t_signup = async (req, res, next) => {
             t_nicname,
             t_subject,
         });
-        return res.status(200).send('회원가입 성공')
+
+        return res.status(200).send('회원가입 성공');
     } catch (error) {
         console.error(error);
         return next(error);
     }
-}
+};
+
 
 exports.signin = (req, res, next) => {
     passport.authenticate('local', (authError, user, info) => {
@@ -104,15 +109,9 @@ exports.signin = (req, res, next) => {
                 return next(signinError);
             }
 
-            req.session.userId = user.s_id ? user.s_id : user.t_id;
-            req.session.userRole = user.s_id ? 'student' : 'teacher';
-
-            const userType = req.session.userRole;
-            const userId = req.session.userId;
-
             console.log("세션 정보:", req.session);
 
-            return res.status(200).json({ userType, userId });
+            return res.status(200).json({ user });
     });
   })(req, res, next);
 };

@@ -1,3 +1,4 @@
+// models/teachers.js
 const Sequelize = require('sequelize');
 
 class Teachers extends Sequelize.Model {
@@ -25,7 +26,7 @@ class Teachers extends Sequelize.Model {
             t_subject: {
                 type: Sequelize.STRING(15),
                 allowNull: false,
-            }
+            },
         }, {
             sequelize,
             timestamps: true,
@@ -38,8 +39,9 @@ class Teachers extends Sequelize.Model {
         });
     }
 
-    static associations(db) {
-        db.User.hasMany(db.Post);
+    static associate(db) {
+        db.Teachers.hasMany(db.Post, { foreignKey: 't_id', onDelete: 'CASCADE', onUpdate: 'CASCADE' });
+        db.Teachers.hasMany(db.Comment, { foreignKey: 't_id', onDelete: 'CASCADE', onUpdate: 'CASCADE' });
     }
 }
 

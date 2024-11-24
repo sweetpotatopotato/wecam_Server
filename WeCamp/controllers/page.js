@@ -2,231 +2,188 @@ const Sequelize = require('sequelize');
 const db = require('../models');
 const passport = require('passport');
 
-exports.createLesson = async (req, res, next) => {
-    console.log(req.body);
+exports.createPost = async (req, res, next) => {
+    const user = req.user;
+    console.log(req.session);
+
     try {
         const {
-            l_title,
-            l_content,
-            l_year,
-            l_semester,
-            l_grade,
-            l_class,
-            l_place
+            p_title,
+            p_content,
         } = req.body;
-        const { t_id } = req.user.dataValues;
 
-        const lesson = await db.Lesson.create({
-            l_title,
-            l_content,
-            l_year,
-            l_semester,
-            l_grade,
-            l_class,
-            l_place,
-            t_id,
+        const s_id = user.s_id;
+        const t_id = user.t_id;
+
+        const post = await db.Post.create({
+            p_title,
+            p_content,
+            s_id: s_id || "aaaa",
+            t_id: t_id || "aaaa",
         });
 
-        res.status(201).json({ lesson });
+        res.status(201).json({ post });
     } catch (error) {
         console.error(error);
         next(error);
     }
 };
 
-exports.readLessons = async (req, res, next) => {
-    const { t_id } = req.user.dataValues;
+exports.readPosts = async (req, res, next) => {
     try {
-        const lessons = await db.Lesson.findAll({ where: { t_id } });
-        res.status(200).json(lessons);
+        const posts = await db.Post.findAll();
+        res.status(200).json(posts);
     } catch (error) {
         console.error(error);
         next(error);
     }
 };
 
-exports.readLessonsData = async (req, res, next) => {
-    const classof = req.user.dataValues.s_classof;
-    const l_grade = Math.floor(classof / 1000);
-    const l_class = Math.floor((classof % 1000) / 100);
-    console.log("----------------");
-    console.log(l_grade, l_class);
-    console.log("----------------");
+exports.readPost = async (req, res, next) => {
+    const p_id = req.params.p_id;
     try {
-        const lessons = await db.Lesson.findAll({
-            where: { l_grade, l_class },
-            order: [['l_year', 'DESC'], ['l_semester', 'DESC']]
+        const post = await db.Post.findOne({
+            where: { p_id },
+            include: [
+                {
+                    model: db.Comment,
+                    where: { p_id },
+                    required: false,
+                }
+            ]
         });
 
-        console.log(lessons);
-        res.status(200).json(lessons);
+        if (!post) {
+            return res.status(404).json({ message: '게시물을 찾을 수 없습니다.' });
+        }
+
+        res.status(200).json(post);
     } catch (error) {
         console.error(error);
         next(error);
     }
 };
 
-exports.readLesson = async (req, res, next) => {
-    console.log(req.params);
-    const { l_id } = req.params;
-    const { t_id } = req.user.dataValues;
-    try {
-        const lesson = await db.Lesson.findOne({ where: { t_id, l_id } });
-        if (!lesson) {
-            return res.status(404).json({ message: '수업을 찾을 수 없습니다.' });
-        }
-        res.status(200).json(lesson);
-    } catch (error) {
-        console.error(error);
-        next(error);
-    }
-};
 
-exports.readLessonData = async (req, res, next) => {
-    const classof = req.user.dataValues.s_classof;
-    const l_grade = Math.floor(classof / 1000);
-    const l_class = Math.floor((classof % 1000) / 100);
-    const l_id = parseInt(req.params.id, 10);
-    console.log("--------------------");
-    console.log(l_grade, l_class, l_id);
-    console.log("--------------------");
-    console.log(req.params);
-    try {
-        const lessons = await db.Lesson.findOne({
-            where: { l_grade, l_class, l_id },
-        });
-
-        console.log(lessons);
-        res.status(200).json(lessons);
-    } catch (error) {
-        console.error(error);
-        next(error);
-    }
-};
-
-exports.updateLesson = async (req, res, next) => {
-    // console.log(req.body);
-    // console.log(req.params.id);
-    // console.log(req.params);
-    // console.log(req.l_id);
-    const l_id = req.params.id;
-    const {
-        l_title,
-        l_content,
-        l_year,
-        l_semester,
-        l_grade,
-        l_class,
-        l_place
-    } = req.body;
-    const { t_id } = req.user.dataValues;
+exports.updatePost = async (req, res, next) => {
+    const p_id = req.params.p_id;
+    const { p_title, p_content } = req.body;
 
     try {
-        const lesson = await db.Lesson.findOne({ where: { l_id } });
+        const post = await db.Post.findOne({ where: { p_id } });
 
-        if (!lesson) {
-            return res.status(404).json({ message: '수업을 찾을 수 없습니다.' });
+        if (!post) {
+            return res.status(404).json({ message: '게시물을 찾을 수 없습니다.' });
         }
 
-        if (lesson.t_id !== t_id) {
-            return res.status(403).json({ message: '이 수업을 수정할 권한이 없습니다.' });
-        }
-
-        await db.Lesson.update(
-            {
-                l_title,
-                l_content,
-                l_year,
-                l_semester,
-                l_grade,
-                l_class,
-                l_place,
-            },
-            { where: { l_id } }
+        await db.Post.update(
+            { p_title, p_content },
+            { where: { p_id } }
         );
 
-        res.status(200).json({ message: '수업이 성공적으로 업데이트되었습니다.' });
+        res.status(200).json({ message: '게시물이 성공적으로 업데이트되었습니다.' });
     } catch (error) {
         console.error(error);
         next(error);
     }
 };
 
-exports.renderProfile = (req, res) => {
-    const userType = req.session.userRole;
-    const userId = req.session.userId;
-    const t_username = req.user.dataValues.t_name;
-    const s_username = req.user.dataValues.s_name;
-    const usersubject = req.user.dataValues.t_subject;
-    const classof = req.user.dataValues.s_classof;
-    console.log(req.user.dataValues);
+exports.createComment = async (req, res, next) => {
+    const p_id = req.params.p_id;
+    const user = req.user;
+    const s_id = user.s_id;
+    const t_id = user.t_id;
 
-    if (userType === "teacher") {
-        return res.status(200).json({ userType, t_username, usersubject, userId });
-    } else {
-        return res.status(200).json({ userType, s_username, userId, classof });
+    try {
+        const { c_content } = req.body;
+
+        const comment = await db.Comment.create({
+            c_content,
+            p_id,
+            s_id: s_id || "aaaa",
+            t_id: t_id || "aaaa",
+        });
+
+        res.status(201).json({ comment });
+    } catch (error) {
+        console.error(error);
+        next(error);
     }
 };
 
-exports.renderPasswordChange = async (req, res) => {
-    const userType = req.session.userRole;
-    const userId = req.session.userId;
-    const { currentPassword, newPassword } = req.body;
-    console.log(userType, userId);
-    console.log(currentPassword, newPassword);
-    if (currentPassword && newPassword) {
-        if (userType === "teacher") {
-            const storedPassword = req.user.dataValues.t_pass;
-            if (currentPassword !== storedPassword) {
-                return res.status(400).json({ message: "현재 비밀번호가 일치하지 않습니다." });
-            }
-
-            if (newPassword.length < 8) {
-                return res.status(400).json({ message: "비밀번호는 최소 8자 이상이어야 합니다." });
-            }
-
-            try {
-                console.log(userType);
-                const user = await db.Teachers.findOne({ where: { t_id: userId } });
-                await user.update({ t_pass: newPassword });
-            } catch (err) {
-                console.error("DB 업데이트 오류:", err);
-                return res.status(500).json({ message: "비밀번호 변경 중 오류가 발생했습니다.", error: err });
-            }
-            return res.status(200).json({ message: "비밀번호가 성공적으로 변경되었습니다." });
-        } else {
-            const storedPassword = req.user.dataValues.s_pass;
-            if (currentPassword !== storedPassword) {
-                return res.status(400).json({ message: "현재 비밀번호가 일치하지 않습니다." });
-            }
-
-            if (newPassword.length < 8) {
-                return res.status(400).json({ message: "비밀번호는 최소 8자 이상이어야 합니다." });
-            }
-
-            try {
-                console.log(userType);
-                const user = await db.Students.findOne({ where: { s_id: userId } });
-                await user.update({ s_pass: newPassword });
-                return res.status(200).json({ message: "비밀번호가 성공적으로 변경되었습니다." });
-            } catch (err) {
-                console.error("DB 업데이트 오류:", err);
-                return res.status(500).json({ message: "비밀번호 변경 중 오류가 발생했습니다.", error: err });
-            }
+exports.readComments = async (req, res, next) => {
+    const p_id = req.params.p_id;
+    try {
+        const comments = await db.Comment.findAll({
+            where: { p_id },
+            order: [['createdAt', 'DESC']]
+        });
+        
+        if (!comments || comments.length === 0) {
+            return res.status(404).json({ message: '댓글이 없습니다.' });
         }
-    } else {
-        return res.status(401).json({ message: "빈칸 없이 입력해주세요." });
+
+        res.status(200).json(comments);
+    } catch (error) {
+        console.error(error);
+        next(error);
     }
 };
 
-exports.renderOnboarding = (req, res) => {
-    res.status(200).send("onboarding(시작화면)");
-}
 
-// exports.renderStudentsMain = (req, res) => {
-//     res.status(200).send("학생 메인페이지");
-// };
+exports.renderProfile = (req, res) => {
+    const { t_name, s_name, t_id, s_id, t_nicname, s_nicname } = req.user.dataValues;
 
-// exports.renderTeachersMain = (req, res) => {
-//     res.status(200).send("선생님 메인페이지");
-// };
+    if (t_id !== undefined && t_id !== null) {
+        return res.status(200).json({ t_id, t_name, t_nicname });
+    } else if (s_id !== undefined && s_id !== null) {
+        return res.status(200).json({ s_id, s_name, s_nicname });
+    } else {
+        return res.status(400).json({ message: "Invalid user type." });
+    }
+};
+
+exports.NicnameChange = async (req, res) => {
+    const userId = req.session.passport.user;
+    const { newnicname } = req.body;
+
+    if (!newnicname) {
+        return res.status(400).json({ message: '닉네임을 입력하세요.' });
+    }
+
+    try {
+        const existingStudent = await db.Students.findOne({
+            where: { s_nicname: newnicname },
+        });
+
+        const existingTeacher = await db.Teachers.findOne({
+            where: { t_nicname: newnicname },
+        });
+
+        if (existingStudent || existingTeacher) {
+            return res.status(400).json({ message: '이미 존재하는 닉네임입니다.' });
+        }
+
+        const student = await db.Students.findOne({ where: { s_id: userId } });
+        const teacher = await db.Teachers.findOne({ where: { t_id: userId } });
+
+        if (student) {
+            await db.Students.update(
+                { s_nicname: newnicname },
+                { where: { s_id: userId } }
+            );
+        } else if (teacher) {
+            await db.Teachers.update(
+                { t_nicname: newnicname },
+                { where: { t_id: userId } }
+            );
+        } else {
+            return res.status(400).json({ message: '사용자를 찾을 수 없습니다.' });
+        }
+
+        res.status(200).json({ message: '닉네임이 성공적으로 변경되었습니다.' });
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ message: '서버 오류가 발생했습니다.' });
+    }
+};

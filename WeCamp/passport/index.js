@@ -5,16 +5,17 @@ const Teachers = require('../models/teachers');
 
 module.exports = () => {
     passport.serializeUser((user, done) => {
-        done(null, { id: user.s_id || user.t_id, role: user.s_pass ? 'student' : 'teacher' });
+        done(null, user.id); // ID만 저장
     });
 
-    passport.deserializeUser(async (obj, done) => {
+    passport.deserializeUser(async (id, done) => {
         try {
-            let user = null;
-            if (obj.role === 'student') {
-                user = await Students.findOne({ where: { s_id: obj.id } });
-            } else if (obj.role === 'teacher') {
-                user = await Teachers.findOne({ where: { t_id: obj.id } });
+            let user = await Students.findOne({ where: { s_id: id } });
+            if (!user) {
+                user = await Teachers.findOne({ where: { t_id: id } });
+            }
+            if (!user) {
+                return done(new Error('User not found'));
             }
             done(null, user);
         } catch (err) {
@@ -22,5 +23,5 @@ module.exports = () => {
         }
     });
 
-    local();
+    local(); // 로컬 전략 초기화
 };
