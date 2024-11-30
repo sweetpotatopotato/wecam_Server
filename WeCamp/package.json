@@ -3,7 +3,8 @@
     "version": "1.0.0",
     "main": "app.js",
     "scripts": {
-        "start": "nodemon app",
+        "start": "cross-env NODE_ENV=production PORT=3948 pm2 start app.js -i 0s",
+        "dev": "nodemon server",
         "test": "echo \"Error: no test specified\" && exit 1"
     },
     "author": "GROOVY",
@@ -14,6 +15,8 @@
         "cheerio": "^1.0.0",
         "cookie-parser": "^1.4.6",
         "cors": "^2.8.5",
+        "cross-env": "^7.0.3",
+        "csurf": "^1.11.0",
         "dotenv": "^16.4.5",
         "express": "^4.21.1",
         "express-session": "^1.18.0",
@@ -23,6 +26,8 @@
         "nunjucks": "^3.2.4",
         "passport": "^0.7.0",
         "passport-local": "^1.0.0",
+        "pm2": "^5.4.3",
+        "sanitize-html": "^2.13.1",
         "sequelize": "^6.37.3",
         "sequelize-cli": "^6.6.2"
     },
