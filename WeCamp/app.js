@@ -6,6 +6,10 @@ const session = require('express-session');
 const nunjucks = require('nunjucks');
 const dotenv = require('dotenv');
 const passport = require('passport');
+const helmet = require('helmet');
+const hpp = require('hpp');
+const redis = require('redis');
+const RedisStore = require('connect-redis')(session);
 const cors = require('cors');
 const { swaggerUi, swaggerSpec } = require('./swagger'); // Swagger 관련 설정
 const apiRouter = require('./routes/api');
@@ -14,12 +18,16 @@ const passportConfig = require('./passport');
 
 // 환경 변수 설정
 dotenv.config();
-
+const redisClient = redis.createClient({
+    url: `redis://${process.env.REDIS_HOST}:${process.env.REDIS_PORT}`,
+    legacyMode: true,
+});
+redisClient.connect().catch(console.error);
 const app = express();
 passportConfig(); // Passport 설정
 
 // 서버 포트 설정
-app.set('port', process.env.PORT || 3849);
+app.set('port', process.env.PORT || 3948);
 
 // Swagger UI 경로 설정
 app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec));
@@ -43,6 +51,14 @@ sequelize.sync({ force: false })
 // 미들웨어 설정
 if (process.env.NODE_ENV === 'production') {
     app.use(morgan('combined'));
+    app.use(
+        helmet({
+            contentSecurityPolicy: false,
+            crossOriginEmbedderPolicy: false,
+            crossOriginResourcePolicy: false,
+        }),
+    );
+    app.use(hpp());
 } else {
     app.use(morgan('dev'));
 }
@@ -58,6 +74,7 @@ const sessionOption = {
         httpOnly: true,
         secure: false,
     },
+    store: new RedisStore({ client: redisClient }),
 };
 if (process.env.NODE_ENV === 'production') {
     sessionOption.proxy = true;
