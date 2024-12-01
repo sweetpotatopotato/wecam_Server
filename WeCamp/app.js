@@ -9,7 +9,7 @@ const passport = require('passport');
 const helmet = require('helmet');
 const hpp = require('hpp');
 const redis = require('redis');
-const RedisStore = require('connect-redis')(session);
+const RedisStore = require('connect-redis');
 const cors = require('cors');
 const { swaggerUi, swaggerSpec } = require('./swagger'); // Swagger 관련 설정
 const apiRouter = require('./routes/api');
@@ -27,7 +27,7 @@ const app = express();
 passportConfig(); // Passport 설정
 
 // 서버 포트 설정
-app.set('port', process.env.PORT || 3948);
+app.set('port', process.env.PORT || 3849);
 
 // Swagger UI 경로 설정
 app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec));
@@ -74,7 +74,7 @@ const sessionOption = {
         httpOnly: true,
         secure: false,
     },
-    store: new RedisStore({ client: redisClient }),
+    //store: new RedisStore({ client: redisClient }),
 };
 if (process.env.NODE_ENV === 'production') {
     sessionOption.proxy = true;
