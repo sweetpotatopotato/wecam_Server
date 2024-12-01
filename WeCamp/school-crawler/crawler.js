@@ -2,7 +2,7 @@
 const axios = require('axios');
 const cheerio = require('cheerio');
 const mysql = require('mysql2');
-const config = require('../config/config.json'); // config.json 파일 불러오기
+const config = require('../config/config.js'); // config.json 파일 불러오기
 
 // 환경 설정 불러오기
 const env = process.env.NODE_ENV || 'development';
